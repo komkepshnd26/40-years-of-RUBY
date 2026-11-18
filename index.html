@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Undian HUT 40 Tahun Ruby</title>
+<meta name="description" content="Undian doorprize HUT ke-40 RSU Surya Husadha Group. Bisa dipakai tanpa internet.">
+<meta name="theme-color" content="#560412">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preload" href="marcellus-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="figtree-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face{font-family:"Marcellus";src:url("marcellus-latin-400-normal.woff2") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Figtree";src:url("figtree-latin-wght-normal.woff2") format("woff2");font-weight:300 900;font-style:normal;font-display:swap}
+
+/* Tata letak: kepala ruby dengan logo, panggung undian ruby di kiri (nama besar + tombol), panel data dan riwayat pemenang di kanan.
+   Warna mengikuti logo 40 Years of Ruby: merah ruby tua dan emas. */
+:root{
+  --bg:#f5f1f2; --surface:#ffffff; --fg:#2a0d14; --muted:#6f5057; --line:#e1d2d5;
+  --accent:#7d0b24; --accent-fg:#ffffff; --focus:#7d0b24; --danger:#b3262f;
+  --gold:#d9ae64; --gold-fg:#3a0b14;
+  --stage:#5a0516; --stage-2:#470211; --stage-fg:#fbf3ee; --stage-muted:#e0c08a; --stage-line:#84243a;
+  --font-display:"Marcellus",Georgia,"Times New Roman",serif;
+  --font-body:"Figtree","Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#150407; --surface:#230a10; --fg:#f6e9e6; --muted:#b99aa0; --line:#4a1a25;
+  --accent:#d9ae64; --accent-fg:#2c0a12; --focus:#d9ae64; --danger:#ff8f98; color-scheme:dark}}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:15px;line-height:1.5}
+.app{max-width:1240px;margin:0 auto;padding-top:max(18px,env(safe-area-inset-top,0px));padding-bottom:max(32px,env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:16px}
+
+/* Kepala */
+.brand{display:flex;align-items:center;flex-wrap:wrap;gap:12px 20px;background:linear-gradient(135deg,var(--stage),var(--stage-2));color:var(--stage-fg);border-radius:14px;padding:12px 18px}
+.brand img{height:62px;width:auto;flex:none}
+.titles{flex:1 1 220px;min-width:0}
+.brand h1{font-family:var(--font-display);font-weight:400;font-size:clamp(22px,3.2vw,32px);line-height:1.1;margin:0;color:var(--gold);text-wrap:balance}
+.brand p{margin:4px 0 0;color:var(--stage-muted);font-size:14px}
+.brand-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chip{border:1px solid var(--stage-line);color:var(--stage-muted);border-radius:999px;padding:4px 12px;font-size:12px;letter-spacing:.04em;white-space:nowrap}
+
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
+
+/* Panggung */
+.stage{--focus:var(--gold);position:relative;overflow:hidden;color:var(--stage-fg);border-radius:14px;min-height:520px;padding:22px;display:flex;flex-direction:column;gap:18px;
+  background:radial-gradient(circle at 90% -10%,rgba(217,174,100,.26) 0,rgba(217,174,100,.08) 24%,transparent 48%),linear-gradient(135deg,var(--stage),var(--stage-2))}
+.stage:fullscreen{border-radius:0;padding:max(28px,env(safe-area-inset-top,0px)) 40px 32px}
+.stage-top{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.prize{display:flex;align-items:center;gap:8px;min-width:0;flex:1 1 260px}
+.prize label{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--stage-muted);white-space:nowrap}
+.stage input,.stage select{background:rgba(255,255,255,.08);border:1px solid var(--stage-line);color:var(--stage-fg);border-radius:8px;padding:8px 10px;font:inherit;max-width:100%}
+.prize input{flex:1;min-width:0;font-weight:600}
+.stage select option{color:#2a0d14;background:#fff}
+.stage input::placeholder{color:var(--stage-muted)}
+.stage-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tenure{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--stage-muted)}
+.tenure input{width:68px;padding:8px}
+
+.display{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:12px 0;min-height:260px}
+.name{font-family:var(--font-display);font-weight:400;font-size:clamp(32px,6.4vw,84px);line-height:1.08;margin:0;max-width:100%;overflow-wrap:anywhere;text-wrap:balance;min-height:1.1em}
+.fullscreen-big .name{font-size:clamp(40px,7.6vw,112px)}
+.unit{font-size:clamp(16px,2.2vw,26px);color:var(--stage-muted);font-weight:500;min-height:1.4em;margin:0;overflow-wrap:anywhere}
+.idle-logo{display:none;width:min(560px,86%);max-width:100%;height:auto}
+.display.idle .idle-logo{display:block}
+.display.idle .name,.display.idle .unit{display:none}
+.display.spinning .name{opacity:.92}
+.display.spinning .unit{opacity:.7}
+.display.won .name{color:var(--gold);animation:pop .7s cubic-bezier(.2,1.4,.4,1)}
+.badge{display:inline-block;background:var(--gold);color:var(--gold-fg);font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:4px 12px}
+@keyframes pop{0%{transform:scale(.86);opacity:.2}100%{transform:scale(1);opacity:1}}
+
+.actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.btn-spin{background:var(--gold);color:var(--gold-fg);border:0;border-radius:12px;font-family:var(--font-display);font-weight:400;font-size:clamp(22px,2.8vw,30px);padding:14px 38px;min-width:220px}
+.btn-spin:disabled{opacity:.55;cursor:default}
+.btn-ghost{background:transparent;color:var(--stage-fg);border:1px solid var(--stage-line);border-radius:10px;padding:10px 16px;font-weight:600}
+.btn-ghost:hover{background:rgba(255,255,255,.08)}
+.note{min-height:1.4em;text-align:center;color:var(--stage-muted);margin:0;font-size:14px}
+
+/* Panel */
+.side{display:flex;flex-direction:column;gap:16px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.card h2{font-family:var(--font-display);font-weight:400;font-size:20px;margin:0;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.card h2 small{font-family:var(--font-body);font-weight:500;color:var(--muted);font-size:13px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stat{border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.stat b{display:block;font-family:var(--font-display);font-weight:400;font-size:28px;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{color:var(--muted);font-size:12px}
+textarea{width:100%;min-height:150px;resize:vertical;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:10px;font:13px/1.45 ui-monospace,Menlo,Consolas,monospace}
+.help{color:var(--muted);font-size:13px;margin:0}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+.btn{background:var(--accent);color:var(--accent-fg);border:0;border-radius:8px;padding:9px 14px;font-weight:600}
+.btn.alt{background:transparent;color:var(--fg);border:1px solid var(--line)}
+.btn.alt:hover{background:var(--bg)}
+.btn.warn{background:transparent;color:var(--danger);border:1px solid var(--danger)}
+input[type=file]{font:inherit;max-width:100%;color:var(--muted)}
+ol.winners{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;max-height:340px;overflow:auto;border:1px solid var(--line);border-radius:10px}
+ol.winners li{display:grid;grid-template-columns:2ch minmax(0,1fr);gap:4px 10px;padding:9px 12px;border-bottom:1px solid var(--line);align-items:baseline}
+ol.winners li:last-child{border-bottom:0}
+.no{color:var(--muted);font-variant-numeric:tabular-nums;text-align:right}
+.w-name{font-weight:600;overflow-wrap:anywhere}
+.w-meta{grid-column:2;color:var(--muted);font-size:13px;overflow-wrap:anywhere}
+li.absent .w-name{text-decoration:line-through;color:var(--muted)}
+li.absent .w-meta::after{content:" · tidak hadir";color:var(--danger)}
+.empty{color:var(--muted);margin:0;padding:6px 2px}
+@media (prefers-reduced-motion:reduce){.display.won .name{animation:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="brand">
+    <img src="ruby-40-logo-cropped.svg" alt="40 Years of Ruby">
+    <div class="titles">
+      <h1>Undian Doorprize</h1>
+      <p>HUT ke-40 RSU Surya Husadha Group</p>
+    </div>
+    <div class="brand-tools">
+      <span class="chip" id="offlineChip" hidden>Siap dipakai offline</span>
+      <button class="btn-ghost" id="install" type="button" hidden>Pasang aplikasi</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <section class="stage" id="stage" aria-label="Panggung undian">
+      <div class="stage-top">
+        <div class="prize">
+          <label for="prize">Hadiah</label>
+          <input id="prize" type="text" list="prizes" value="Doorprize sesi 1" autocomplete="off">
+          <datalist id="prizes">
+            <option value="Doorprize sesi 1"></option>
+            <option value="Doorprize sesi 2 (hadiah utama)"></option>
+            <option value="Mini game"></option>
+          </datalist>
+        </div>
+        <div class="stage-tools">
+          <select id="unitFilter" aria-label="Undi dari unit"><option value="">Semua unit</option></select>
+          <div class="tenure" title="Kosongkan untuk semua masa kerja. Peserta tanpa data masa kerja tidak ikut saat filter aktif.">
+            <label for="tMin">Masa kerja</label>
+            <input id="tMin" type="number" min="0" step="0.5" inputmode="decimal" placeholder="min">
+            <span>–</span>
+            <input id="tMax" type="number" min="0" step="0.5" inputmode="decimal" placeholder="maks">
+            <span>tahun</span>
+          </div>
+          <select id="dur" aria-label="Lama putaran">
+            <option value="30" selected>Putaran 30 detik</option>
+            <option value="10">Putaran 10 detik (uji coba)</option>
+          </select>
+          <button class="btn-ghost" id="fs" type="button">Layar penuh</button>
+        </div>
+      </div>
+
+      <div class="display idle" id="display" aria-live="polite">
+        <img class="idle-logo" src="ruby-40-logo-cropped.svg" alt="40 Years of Ruby: Resilience, Unity, Brilliance, Years of Compassion">
+        <span class="badge" id="badge" hidden>Pemenang</span>
+        <p class="name" id="name"></p>
+        <p class="unit" id="unit"></p>
+      </div>
+
+      <div class="actions">
+        <button class="btn-spin" id="spin" type="button">Putar undian</button>
+        <button class="btn-ghost" id="absent" type="button" hidden>Tidak hadir, undi ulang</button>
+      </div>
+      <p class="note" id="note">Tekan tombol atau spasi untuk memulai.</p>
+    </section>
+
+    <aside class="side">
+      <section class="card">
+        <div class="stats">
+          <div class="stat"><b id="sRemain">0</b><span>Masih di undian</span></div>
+          <div class="stat"><b id="sTotal">0</b><span>Total peserta</span></div>
+          <div class="stat"><b id="sWin">0</b><span>Pemenang</span></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Data peserta <small id="dataTag"></small></h2>
+        <label for="data" class="help">Satu orang per baris: nama, NIP, unit, masa kerja dalam tahun (contoh 5 atau 5.5), dipisah tab (salin dari Excel) atau titik koma. NIP, unit, dan masa kerja boleh kosong.</label>
+        <textarea id="data" spellcheck="false"></textarea>
+        <div class="row">
+          <button class="btn" id="load" type="button">Pakai data ini</button>
+          <button class="btn alt" id="sample" type="button">Isi contoh</button>
+        </div>
+        <label for="file" class="help">Atau pilih file Excel (.xlsx), CSV, atau TXT. Baris judul boleh dipakai: Nama, NIP, Unit, Masa Kerja. Tanpa judul, urutan kolomnya nama, NIP, unit, masa kerja. Format kolom NIP di Excel sebaiknya Text agar angkanya tidak terpotong. Excel dibaca dari sheet pertama.</label>
+        <input id="file" type="file" accept=".xlsx,.xls,.csv,.txt,text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel">
+      </section>
+
+      <section class="card">
+        <h2>Pemenang <small id="winTag"></small></h2>
+        <ol class="winners" id="winners"></ol>
+        <p class="empty" id="winEmpty">Belum ada pemenang.</p>
+        <div class="row">
+          <button class="btn alt" id="copy" type="button">Salin daftar</button>
+          <button class="btn warn" id="clear" type="button">Hapus semua pemenang</button>
+        </div>
+      </section>
+    </aside>
+  </div>
+</div>
+<noscript>Aplikasi ini membutuhkan JavaScript.</noscript>
+<script src="xlsx.full.min.js"></script>
+<script>
+(function(){
+  var KEY='undian-ruby-40-v1';
+  var SAMPLE=[
+    'Ni Luh Ayu Prabandari\tIGD','I Made Wirawan\tFarmasi','Ni Kadek Sinta Dewi\tLaboratorium','I Gede Surya Adnyana\tRadiologi',
+    'Putu Ratna Sari\tKeperawatan','Komang Aditya Putra\tIT','Ni Wayan Sukerti\tGizi','I Nyoman Budiarta\tRekam Medis',
+    'Luh Gede Mirah\tKeperawatan','Agus Santoso\tTeknik','Ni Made Rina Astuti\tHRD','I Ketut Darma\tSecurity',
+    'Dewi Anggraini\tFarmasi','Eka Putri Lestari\tIGD','Gusti Ayu Mas\tRawat Inap','I Wayan Sudiarta\tLaboratorium',
+    'Rizky Maulana\tIT','Ni Putu Yuni Astiti\tKeuangan','Made Suarjana\tTeknik','Kadek Dwi Cahyani\tRawat Inap',
+    'Ni Komang Tri Utami\tRadiologi','I Putu Hendra\tSecurity','Sri Wahyuni\tGizi','Ketut Ardiani\tKeuangan'
+  ].map(function(l,i){var q=l.split('\t');return q[0]+'\t'+(19850100+i*137)+'\t'+q[1]+'\t'+[2,8,5,12,1,3,15,7,4,10,6,20,9,2,0.5,11,3,6,14,1,8,5,18,4][i]}).join('\n');
+  var $=function(id){return document.getElementById(id)};
+  var people=[], winners=[], spinning=false, unitFilter='', isSample=false, raf=0;
+  var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function parse(text,allowComma){
+    var seen={}, out=[], dup=0, id=0;
+    var sep=allowComma?/\t|;|,/:/\t|;/;
+    text.split(/\r?\n/).forEach(function(line,i){
+      line=line.trim(); if(!line) return;
+      var parts=line.split(sep).map(function(s){return s.trim().replace(/^"|"$/g,'')});
+      var n=parts[0], nip=parts[1]||'', u=parts[2]||'', tm=parts[3], t=null;
+      if(tm!==undefined && tm!==''){var f=parseFloat(String(tm).replace(',','.')); if(!isNaN(f)) t=f}
+      if(!n) return;
+      if(i===0 && /^(nama|name|nama karyawan)$/i.test(n)) return;
+      var k=nip?'nip|'+nip.toLowerCase():n.toLowerCase()+'|'+u.toLowerCase();
+      if(seen[k]){dup++;return}
+      seen[k]=1; out.push({id:id++,n:n,nip:nip,u:u,t:t});
+    });
+    return {list:out,dup:dup};
+  }
+  function randInt(n){
+    var a=new Uint32Array(1), lim=Math.floor(4294967296/n)*n, x;
+    do{crypto.getRandomValues(a);x=a[0]}while(x>=lim);
+    return x%n;
+  }
+  function won(){var s={};winners.forEach(function(w){s[w.id]=1});return s}
+  function tenureOk(p){
+    var lo=parseFloat($('tMin').value), hi=parseFloat($('tMax').value);
+    if(isNaN(lo)&&isNaN(hi)) return true;
+    if(p.t==null) return false;
+    return (isNaN(lo)||p.t>=lo)&&(isNaN(hi)||p.t<=hi);
+  }
+  function sub(p){var a=[]; if(p.nip) a.push('NIP '+p.nip); if(p.u) a.push(p.u); if(p.t!=null) a.push(p.t+' tahun'); return a.join(' · ')}
+  function rowText(p){return [p.n,p.nip||'',p.u||'',p.t!=null?p.t:''].join('\t').replace(/\t+$/,'')}
+  function eligible(){
+    var s=won();
+    return people.filter(function(p){return !s[p.id] && (!unitFilter||p.u===unitFilter) && tenureOk(p)});
+  }
+  function save(){
+    try{localStorage.setItem(KEY,JSON.stringify({people:people,winners:winners,prize:$('prize').value,sample:isSample,tmin:$('tMin').value,tmax:$('tMax').value}))}catch(e){}
+  }
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+
+  function buildUnits(){
+    var units={}, sel=$('unitFilter');
+    people.forEach(function(p){if(p.u)units[p.u]=1});
+    var keys=Object.keys(units).sort();
+    if(unitFilter && !units[unitFilter]) unitFilter='';
+    sel.innerHTML='<option value="">Semua unit</option>'+keys.map(function(u){return '<option value="'+esc(u)+'">'+esc(u)+'</option>'}).join('');
+    sel.value=unitFilter;
+    sel.hidden=keys.length===0;
+  }
+  function render(){
+    var valid=winners.filter(function(w){return !w.absent});
+    $('sRemain').textContent=eligible().length.toLocaleString('id-ID');
+    $('sTotal').textContent=people.length.toLocaleString('id-ID');
+    $('sWin').textContent=valid.length.toLocaleString('id-ID');
+    $('dataTag').textContent=isSample?'data contoh':'';
+    $('winTag').textContent=winners.length?valid.length+' hadir':'';
+    var ol=$('winners'); ol.innerHTML='';
+    var n=0;
+    winners.forEach(function(w){
+      var li=document.createElement('li');
+      if(w.absent) li.className='absent'; else n++;
+      li.innerHTML='<span class="no">'+(w.absent?'–':n)+'</span><span class="w-name">'+esc(w.n)+'</span><span class="w-meta">'+esc(w.prize)+(w.nip?' · NIP '+esc(w.nip):'')+(w.u?' · '+esc(w.u):'')+'</span>';
+      ol.appendChild(li);
+    });
+    $('winEmpty').hidden=winners.length>0;
+    ol.hidden=winners.length===0;
+    var last=winners[winners.length-1];
+    $('absent').hidden=!(last&&!last.absent&&!spinning);
+    $('spin').disabled=spinning;
+  }
+  function setData(list,sample){
+    people=list; winners=[]; isSample=!!sample; unitFilter='';
+    buildUnits(); render(); save();
+    $('name').textContent=''; $('unit').textContent=''; $('badge').hidden=true;
+    $('display').className='display idle';
+  }
+
+  function spin(){
+    if(spinning) return;
+    var pool=eligible();
+    if(!pool.length){ $('note').textContent='Tidak ada peserta tersisa yang memenuhi filter unit dan masa kerja.'; return }
+    var pick=pool[randInt(pool.length)];
+    var dur=(reduce?1:+$('dur').value)*1000, start=performance.now(), next=start, prev=-1;
+    spinning=true; $('badge').hidden=true;
+    $('display').className='display spinning';
+    $('note').textContent='Mengundi…';
+    $('spin').textContent='Mengundi…'; render();
+    function tick(now){
+      var t=now-start;
+      if(t>=dur){
+        $('name').textContent=pick.n; $('unit').textContent=sub(pick);
+        winners.push({id:pick.id,n:pick.n,nip:pick.nip||'',u:pick.u,prize:$('prize').value.trim()||'Hadiah',absent:false,ts:Date.now()});
+        spinning=false; $('spin').textContent='Putar undian lagi';
+        $('display').className='display won'; $('badge').hidden=false;
+        $('note').textContent='Selamat! Jika tidak hadir, tekan “Tidak hadir, undi ulang”.';
+        render(); save(); return;
+      }
+      if(now>=next){
+        var p=t/dur, r, tries=0;
+        do{r=pool[randInt(pool.length)];tries++}while(pool.length>1&&r.id===prev&&tries<4);
+        prev=r.id; $('name').textContent=r.n; $('unit').textContent=sub(r);
+        next=now+35+430*p*p*p;
+      }
+      raf=requestAnimationFrame(tick);
+    }
+    raf=requestAnimationFrame(tick);
+  }
+  function markAbsent(){
+    var last=winners[winners.length-1];
+    if(!last||last.absent||spinning) return;
+    last.absent=true; $('prize').value=last.prize; save(); render(); spin();
+  }
+
+  function armConfirm(btn,label,fn){
+    var orig=btn.textContent, timer=0, armed=false;
+    btn.addEventListener('click',function(){
+      if(!armed){armed=true;btn.textContent=label;timer=setTimeout(function(){armed=false;btn.textContent=orig},3000);return}
+      clearTimeout(timer);armed=false;btn.textContent=orig;fn();
+    });
+  }
+  function copyText(text){
+    function fallback(){
+      var ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();
+      var ok=false;try{ok=document.execCommand('copy')}catch(e){}
+      document.body.removeChild(ta);return ok;
+    }
+    try{
+      return navigator.clipboard.writeText(text).then(function(){return true},function(){return fallback()});
+    }catch(e){return Promise.resolve(fallback())}
+  }
+
+  function cl(x){return String(x==null?'':x).replace(/[\t\r\n;]+/g,' ').trim()}
+  function textToRows(text,allowComma){
+    var sep=allowComma?/\t|;|,/:/\t|;/;
+    return text.split(/\r?\n/).map(function(l){return l.split(sep).map(function(x){return x.replace(/^"|"$/g,'')})});
+  }
+  function rowsToList(rows){
+    var h=0;
+    while(h<rows.length && !rows[h].some(function(c){return cl(c)!==''})) h++;
+    if(h>=rows.length) return {list:[],dup:0};
+    var ix={n:-1,p:-1,u:-1,t:-1};
+    rows[h].forEach(function(c,i){
+      var x=cl(c).toLowerCase();
+      if(ix.n<0&&/^(nama|name)/.test(x)) ix.n=i;
+      else if(ix.p<0&&/^(nip|nik|nomor induk|no\.? ?(induk|pegawai|karyawan)|id\b)/.test(x)) ix.p=i;
+      else if(ix.u<0&&/unit|departemen|bagian|divisi/.test(x)) ix.u=i;
+      else if(ix.t<0&&/masa kerja|lama kerja|tenure/.test(x)) ix.t=i;
+    });
+    var body;
+    if(ix.n>=0){body=rows.slice(h+1)} else {ix={n:0,p:1,u:2,t:3};body=rows.slice(h)}
+    var lines=body.map(function(r){return [cl(r[ix.n]),cl(r[ix.p]),cl(r[ix.u]),cl(r[ix.t])].join('\t')});
+    return parse(lines.join('\n'),false);
+  }
+  function readExcel(f){
+    if(typeof XLSX==='undefined'){
+      $('note').textContent='Pembaca Excel belum termuat. Periksa internet, atau salin kolom dari Excel dan tempel di kotak data.';
+      return;
+    }
+    var fr=new FileReader();
+    fr.onload=function(){
+      try{
+        var wb=XLSX.read(fr.result,{type:'array'});
+        var sheetName=wb.SheetNames[0];
+        var rows=XLSX.utils.sheet_to_json(wb.Sheets[sheetName],{header:1,defval:'',raw:false});
+        var r=rowsToList(rows);
+        if(!r.list.length){$('note').textContent='Tidak ada nama yang terbaca di sheet "'+sheetName+'". Pastikan ada kolom Nama.';return}
+        $('data').value=r.list.map(rowText).join('\n');
+        setData(r.list,false);
+        var noT=r.list.filter(function(p){return p.t==null}).length;
+        $('note').textContent=r.list.length.toLocaleString('id-ID')+' peserta dimuat dari sheet "'+sheetName+'"'+(r.dup?' ('+r.dup+' nama ganda diabaikan)':'')+(noT&&noT<r.list.length?'. '+noT+' orang tanpa data masa kerja.':'.');
+      }catch(err){
+        $('note').textContent='File Excel tidak bisa dibaca. Coba simpan ulang sebagai .xlsx atau CSV.';
+      }
+    };
+    fr.readAsArrayBuffer(f);
+  }
+  $('spin').addEventListener('click',spin);
+  $('absent').addEventListener('click',markAbsent);
+  $('unitFilter').addEventListener('change',function(e){unitFilter=e.target.value;render()});
+  $('prize').addEventListener('input',save);
+  ['tMin','tMax'].forEach(function(id){$(id).addEventListener('input',function(){render();save()})});
+  $('load').addEventListener('click',function(){
+    var r=rowsToList(textToRows($('data').value,false));
+    if(!r.list.length){$('note').textContent='Data kosong. Tempel minimal satu nama.';return}
+    setData(r.list,false);
+    $('note').textContent=r.list.length.toLocaleString('id-ID')+' peserta dimuat'+(r.dup?' ('+r.dup+' nama ganda diabaikan)':'')+'.';
+  });
+  $('sample').addEventListener('click',function(){$('data').value=SAMPLE;setData(parse(SAMPLE,false).list,true);$('note').textContent='Data contoh dimuat.'});
+  $('file').addEventListener('change',function(e){
+    var f=e.target.files[0]; if(!f) return;
+    if(/\.xlsx?$/i.test(f.name)){readExcel(f);return}
+    var fr=new FileReader();
+    fr.onload=function(){
+      var txt=String(fr.result||'');
+      var r=rowsToList(textToRows(txt,/\.csv$/i.test(f.name)));
+      if(!r.list.length){$('note').textContent='File tidak berisi nama yang bisa dibaca.';return}
+      $('data').value=r.list.map(rowText).join('\n');
+      setData(r.list,false);
+      $('note').textContent=r.list.length.toLocaleString('id-ID')+' peserta dimuat dari '+f.name+(r.dup?' ('+r.dup+' nama ganda diabaikan)':'')+'.';
+    };
+    fr.readAsText(f);
+  });
+  $('copy').addEventListener('click',function(){
+    var n=0,lines=winners.filter(function(w){return !w.absent}).map(function(w){n++;return n+'. '+w.prize+' – '+w.n+(w.nip?' / NIP '+w.nip:'')+(w.u?' ('+w.u+')':'')});
+    if(!lines.length){$('note').textContent='Belum ada pemenang untuk disalin.';return}
+    copyText(lines.join('\n')).then(function(ok){$('note').textContent=ok?'Daftar pemenang disalin.':'Gagal menyalin. Salin manual dari daftar.'});
+  });
+  armConfirm($('clear'),'Yakin? Tekan lagi',function(){winners=[];save();render();$('name').textContent='';$('unit').textContent='';$('badge').hidden=true;$('display').className='display idle';$('note').textContent='Semua pemenang dihapus, peserta kembali ke undian.'});
+
+  $('fs').addEventListener('click',function(){
+    var st=$('stage');
+    try{
+      if(document.fullscreenElement){document.exitFullscreen()}
+      else if(st.requestFullscreen){st.requestFullscreen().catch(function(){$('note').textContent='Layar penuh tidak tersedia di tampilan ini.'})}
+      else $('note').textContent='Layar penuh tidak tersedia di tampilan ini.';
+    }catch(e){$('note').textContent='Layar penuh tidak tersedia di tampilan ini.'}
+  });
+  document.addEventListener('fullscreenchange',function(){document.body.classList.toggle('fullscreen-big',!!document.fullscreenElement);$('stage').classList.toggle('fullscreen-big',!!document.fullscreenElement)});
+  document.addEventListener('keydown',function(e){
+    if(e.code!=='Space') return;
+    var t=e.target&&e.target.tagName;
+    if(t==='INPUT'||t==='TEXTAREA'||t==='SELECT'||t==='BUTTON') return;
+    e.preventDefault(); spin();
+  });
+
+  // Muat data tersimpan, atau data contoh
+  var loaded=false;
+  try{
+    var s=JSON.parse(localStorage.getItem(KEY)||'null');
+    if(s&&s.people&&s.people.length){
+      people=s.people; winners=s.winners||[]; isSample=!!s.sample;
+      if(s.prize) $('prize').value=s.prize;
+      $('data').value=people.map(rowText).join('\n');
+      if(s.tmin!==undefined) $('tMin').value=s.tmin;
+      if(s.tmax!==undefined) $('tMax').value=s.tmax;
+      loaded=true;
+    }
+  }catch(e){}
+  if(!loaded){
+    $('data').value=SAMPLE; people=parse(SAMPLE,false).list; isSample=true;
+  }
+  buildUnits(); render();
+  if(isSample) $('note').textContent='Ini data contoh. Ganti dengan daftar nama karyawan, lalu tekan “Pakai data ini”.';
+
+  // Pasang sebagai aplikasi dan tanda siap offline
+  var deferred=null;
+  window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferred=e;$('install').hidden=false});
+  $('install').addEventListener('click',function(){
+    if(!deferred) return;
+    deferred.prompt();
+    deferred.userChoice.then(function(){deferred=null;$('install').hidden=true});
+  });
+  window.addEventListener('appinstalled',function(){$('install').hidden=true});
+  if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
+    navigator.serviceWorker.register('sw.js')
+      .then(function(){return navigator.serviceWorker.ready})
+      .then(function(){$('offlineChip').hidden=false})
+      .catch(function(){});
+  }
+})();
+</script>
+</body>
+</html>
