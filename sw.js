@@ -1,8 +1,8 @@
 /* Service worker: menyimpan berkas aplikasi supaya jalan tanpa internet.
    Naikkan VERSION setiap kali ada berkas yang diganti. */
-const VERSION = 'undian-ruby-v6';
+const VERSION = 'undian-ruby-v8';
 const XLSX_URL = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-const CORE = ['./', './index.html', './manifest.json', './sw.js', './logo.svg', './icon-192.png', './icon-512.png'];
+const CORE = ['./', './index.html', './manifest.json', './sw.js', './logo.svg', './maskot.webp', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(

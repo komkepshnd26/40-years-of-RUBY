@@ -126,6 +126,37 @@ li.absent .w-meta::after{content:" · tidak hadir";color:var(--danger)}
 .filebtn:focus-within{outline:3px solid var(--focus);outline-offset:2px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 @media (prefers-reduced-motion:reduce){.display.won .name{animation:none}}
+/* Maskot Ruby: melayang saat diam, heboh saat berputar, melompat saat ada pemenang */
+.mascot{position:absolute;left:50%;margin-left:calc(var(--mw) / -2);bottom:10px;width:var(--mw);pointer-events:none;z-index:1}
+.mascot img{display:block;width:100%;height:auto;transform-origin:50% 100%;filter:drop-shadow(0 8px 10px rgba(0,0,0,.35));animation:m-idle 3.4s ease-in-out infinite}
+.mascot[data-mood="spin"] img{animation:m-excite .5s linear infinite}
+.mascot[data-mood="won"] img{animation:m-jump 1.25s ease-out 3, m-idle 3.4s ease-in-out 3.75s infinite}
+.mascot .sp{position:absolute;color:var(--gold);font-size:22px;line-height:1;opacity:0}
+.mascot .sp1{left:-4px;top:8%}
+.mascot .sp2{right:-2px;top:2%;font-size:28px}
+.mascot .sp3{right:-10px;top:38%;font-size:18px}
+.mascot[data-mood="won"] .sp{animation:m-spark 1.25s ease-out 3}
+.mascot[data-mood="won"] .sp2{animation-delay:.18s}
+.mascot[data-mood="won"] .sp3{animation-delay:.36s}
+@keyframes m-idle{0%,100%{transform:translateY(0) rotate(-1.5deg) scale(1,1)}50%{transform:translateY(-7px) rotate(1.5deg) scale(.99,1.015)}}
+@keyframes m-excite{0%,100%{transform:translateY(0) rotate(-5deg) scale(1.02,.98)}25%{transform:translateY(-9px) rotate(0) scale(.98,1.03)}50%{transform:translateY(0) rotate(5deg) scale(1.02,.98)}75%{transform:translateY(-9px) rotate(0) scale(.98,1.03)}}
+@keyframes m-jump{0%{transform:translateY(0) scale(1,1)}12%{transform:translateY(0) scale(1.08,.9)}38%{transform:translateY(-40px) rotate(-4deg) scale(.95,1.07)}58%{transform:translateY(0) scale(1.07,.92)}74%{transform:translateY(-16px) rotate(4deg) scale(.98,1.03)}88%{transform:translateY(0) scale(1.03,.97)}100%{transform:translateY(0) scale(1,1)}}
+@keyframes m-spark{0%{opacity:0;transform:scale(.3) rotate(0)}25%{opacity:1;transform:scale(1.25) rotate(25deg)}60%{opacity:.9;transform:scale(.9) rotate(50deg)}100%{opacity:0;transform:scale(.3) rotate(90deg)}}
+/* Panggung sempit: maskot di tengah bawah, ruang di bawah catatan disisakan.
+   Panggung lebar (isi 740px ke atas): maskot di pojok kanan bawah, tombol bergeser ke kiri. */
+.stage{container-type:inline-size;--mw:100px}
+.stage .note{margin-bottom:calc(var(--mw) * 1.09)}
+.stage:fullscreen{--mw:min(22vh,260px)}
+@container (min-width:740px){
+  .stage > *{--mw:130px}
+  .stage:fullscreen > *{--mw:min(22vh,260px)}
+  .stage .mascot{left:auto;right:16px;margin-left:0;bottom:14px}
+  .stage:fullscreen .mascot{right:28px;bottom:22px}
+  .stage .note{margin-bottom:0}
+  .stage .actions,.stage .note{padding-right:calc(var(--mw) + 24px)}
+}
+@media (prefers-reduced-motion:reduce){.mascot img,.mascot[data-mood] img{animation:none}.mascot .sp{display:none}}
+
 </style>
 </head>
 <body>
@@ -178,6 +209,11 @@ li.absent .w-meta::after{content:" · tidak hadir";color:var(--danger)}
         <span class="badge" id="badge" hidden>Pemenang</span>
         <p class="name" id="name"></p>
         <p class="unit" id="unit"></p>
+      </div>
+
+      <div class="mascot" id="mascot" data-mood="idle" aria-hidden="true">
+        <img src="maskot.webp" alt="" width="420" height="459" draggable="false">
+        <span class="sp sp1">✦</span><span class="sp sp2">✦</span><span class="sp sp3">✦</span>
       </div>
 
       <div class="actions">
@@ -241,6 +277,7 @@ li.absent .w-meta::after{content:" · tidak hadir";color:var(--danger)}
         <p class="empty" id="winEmpty">Belum ada pemenang.</p>
         <div class="row">
           <button class="btn alt" id="copy" type="button">Salin daftar</button>
+          <button class="btn alt" id="dlWin" type="button">Unduh Excel</button>
           <button class="btn warn" id="clear" type="button">Hapus semua pemenang</button>
         </div>
       </section>
@@ -743,6 +780,42 @@ window.UndianDrive = (function () {
     if(!lines.length){$('note').textContent='Belum ada pemenang untuk disalin.';return}
     copyText(lines.join('\n')).then(function(ok){$('note').textContent=ok?'Daftar pemenang disalin.':'Gagal menyalin. Salin manual dari daftar.'});
   });
+  $('dlWin').addEventListener('click',function(){
+    var valid=winners.filter(function(w){return !w.absent});
+    if(!winners.length){$('note').textContent='Belum ada pemenang untuk diunduh.';return}
+    function p2(n){return ('0'+n).slice(-2)}
+    function hm(t){var d=new Date(t);return p2(d.getHours())+':'+p2(d.getMinutes())+':'+p2(d.getSeconds())}
+    var d=new Date(), stamp=d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate())+'-'+p2(d.getHours())+p2(d.getMinutes());
+    var head=['No','Hadiah','Nama','NIP','Unit','Masa Kerja (tahun)','Status','Waktu'];
+    var rows=[head], n=0;
+    winners.forEach(function(w){
+      var src=null; for(var i=0;i<people.length;i++){if(people[i].id===w.id){src=people[i];break}}
+      var t=(src&&src.t!=null)?src.t:'';
+      rows.push([w.absent?'':++n,w.prize||'',w.n,w.nip||'',w.u||'',t,w.absent?'Tidak hadir':'Hadir',w.ts?hm(w.ts):'']);
+    });
+    var blob,name;
+    try{
+      if(typeof XLSX==='undefined') throw new Error('noxlsx');
+      var ws=XLSX.utils.aoa_to_sheet(rows);
+      ws['!cols']=[{wch:5},{wch:28},{wch:30},{wch:20},{wch:18},{wch:18},{wch:12},{wch:10}];
+      // NIP sebagai teks supaya angka panjang tidak terpotong di Excel
+      for(var r=1;r<rows.length;r++){var c=ws[XLSX.utils.encode_cell({r:r,c:3})]; if(c&&c.v!==''){c.t='s';c.v=String(c.v);delete c.w}}
+      var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Pemenang');
+      var out=XLSX.write(wb,{type:'array',bookType:'xlsx'});
+      blob=new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+      name='pemenang-undian-ruby-'+stamp+'.xlsx';
+    }catch(e){
+      // cadangan: CSV (dibaca Excel), NIP diberi tanda kutip depan agar tetap teks
+      var csv='﻿'+rows.map(function(r,ri){return r.map(function(v,ci){
+        var s=String(v==null?'':v); if(ri>0&&ci===3&&s) s='="'+s+'"';
+        return '"'+s.replace(/"/g,'""')+'"'}).join(';')}).join('\r\n');
+      blob=new Blob([csv],{type:'text/csv;charset=utf-8'}); name='pemenang-undian-ruby-'+stamp+'.csv';
+    }
+    var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){URL.revokeObjectURL(a.href)},4000);
+    $('note').textContent='Diunduh: '+name+' ('+valid.length+' hadir'+(winners.length>valid.length?', '+(winners.length-valid.length)+' tidak hadir':'')+').';
+  });
   armConfirm($('clear'),'Yakin? Tekan lagi',function(){winners=[];save();render();$('name').textContent='';$('unit').textContent='';$('badge').hidden=true;$('display').className='display idle';$('note').textContent='Semua pemenang dihapus, peserta kembali ke undian.'});
 
   $('fs').addEventListener('click',function(){
@@ -782,6 +855,17 @@ window.UndianDrive = (function () {
   if(isSample) $('note').textContent='Ini data contoh. Ganti dengan daftar nama karyawan, lalu tekan “Pakai data ini”.';
 
   // Cadangan Google Drive (lihat drive.js)
+  // Maskot mengikuti keadaan panggung: diam, berputar, atau ada pemenang
+  (function(){
+    var disp=$('display'), m=$('mascot');
+    function sync(){
+      var c=disp.className, mood=/\bwon\b/.test(c)?'won':(/\bspinning\b/.test(c)?'spin':'idle');
+      if(m.getAttribute('data-mood')!==mood) m.setAttribute('data-mood',mood);
+    }
+    try{new MutationObserver(sync).observe(disp,{attributes:true,attributeFilter:['class']})}catch(e){}
+    sync();
+  })();
+
   var DriveHooks={
     snapshot:function(){return {app:'undian-ruby-40',v:1,ts:ts,people:people,winners:winners,prize:$('prize').value,tmin:$('tMin').value,tmax:$('tMax').value,sample:isSample}},
     apply:function(d,fromDrive){
