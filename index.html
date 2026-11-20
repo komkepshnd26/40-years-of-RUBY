@@ -200,6 +200,7 @@ li.absent .w-meta::after{content:" · tidak hadir";color:var(--danger)}
             <option value="15">Putaran 15 detik</option>
             <option value="10">Putaran 10 detik (uji coba)</option>
           </select>
+          <button class="btn-ghost" id="snd" type="button" aria-pressed="true">Suara: nyala</button>
           <button class="btn-ghost" id="fs" type="button">Layar penuh</button>
         </div>
       </div>
@@ -660,6 +661,7 @@ window.UndianDrive = (function () {
     $('display').className='display spinning';
     $('note').textContent='Mengundi…';
     $('spin').textContent='Mengundi…'; render();
+    sfx.prime(); sfx.start();
     function tick(now){
       var t=now-start;
       if(t>=dur){
@@ -667,6 +669,7 @@ window.UndianDrive = (function () {
         winners.push({id:pick.id,n:pick.n,nip:pick.nip||'',u:pick.u,prize:$('prize').value.trim()||'Hadiah',absent:false,ts:Date.now()});
         spinning=false; $('spin').textContent='Putar undian lagi';
         $('display').className='display won'; $('badge').hidden=false;
+        sfx.win();
         $('note').textContent='Selamat! Jika tidak hadir, tekan “Tidak hadir, undi ulang”.';
         render(); save(); return;
       }
@@ -674,6 +677,7 @@ window.UndianDrive = (function () {
         var p=t/dur, r, tries=0;
         do{r=pool[randInt(pool.length)];tries++}while(pool.length>1&&r.id===prev&&tries<4);
         prev=r.id; $('name').textContent=r.n; $('unit').textContent=sub(r);
+        sfx.tick(p);
         next=now+35+430*p*p*p;
       }
       raf=requestAnimationFrame(tick);
@@ -855,6 +859,78 @@ window.UndianDrive = (function () {
   if(isSample) $('note').textContent='Ini data contoh. Ganti dengan daftar nama karyawan, lalu tekan “Pakai data ini”.';
 
   // Cadangan Google Drive (lihat drive.js)
+
+  // Efek suara dibuat langsung di browser (tanpa berkas audio), jadi tetap jalan offline
+  var sfx=(function(){
+    var KEYS='undian-ruby-40-sound', ctx=null, master=null, on=true;
+    try{on=localStorage.getItem(KEYS)!=='0'}catch(e){}
+    function ac(){
+      if(!ctx){
+        try{
+          var C=window.AudioContext||window.webkitAudioContext; ctx=new C();
+          var comp=ctx.createDynamicsCompressor(); master=ctx.createGain(); master.gain.value=0.7;
+          master.connect(comp); comp.connect(ctx.destination);
+        }catch(e){ctx=null;return null}
+      }
+      if(ctx.state==='suspended'){try{ctx.resume()}catch(e){}}
+      return ctx;
+    }
+    function tone(f,t,dur,type,vol,f2){
+      var o=ctx.createOscillator(), g=ctx.createGain();
+      o.type=type; o.frequency.setValueAtTime(f,t);
+      if(f2) o.frequency.exponentialRampToValueAtTime(f2,t+dur);
+      g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+      o.connect(g); g.connect(master); o.start(t); o.stop(t+dur+0.05);
+    }
+    function noise(t,dur,freq,q,fn){
+      var n=Math.max(1,Math.floor(ctx.sampleRate*dur)), buf=ctx.createBuffer(1,n,ctx.sampleRate), d=buf.getChannelData(0);
+      for(var i=0;i<n;i++) d[i]=Math.random()*2-1;
+      var src=ctx.createBufferSource(); src.buffer=buf;
+      var bp=ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=freq; bp.Q.value=q;
+      var g=ctx.createGain(); g.gain.setValueAtTime(0.0001,t); fn(g.gain,t);
+      src.connect(bp); bp.connect(g); g.connect(master); src.start(t); src.stop(t+dur);
+    }
+    return {
+      isOn:function(){return on},
+      set:function(v){on=!!v; try{localStorage.setItem(KEYS,on?'1':'0')}catch(e){}},
+      prime:function(){ac()},
+      // bunyi mulai berputar: sapuan naik
+      start:function(){
+        if(!on||!ac()) return; var t=ctx.currentTime+0.01;
+        tone(260,t,0.45,'sawtooth',0.05,1040);
+        noise(t,0.5,1400,0.8,function(g,t0){g.exponentialRampToValueAtTime(0.1,t0+0.2);g.exponentialRampToValueAtTime(0.0001,t0+0.5)});
+      },
+      // satu ketukan tiap nama berganti; p = 0..1 kemajuan putaran
+      tick:function(p){
+        if(!on||!ac()) return; var t=ctx.currentTime+0.005;
+        var f=620+Math.random()*80+(1-p)*520;
+        tone(f,t,0.045,'square',0.07+0.05*p);
+        if(p>0.86) tone(f/2,t,0.09,'triangle',0.1);
+      },
+      // pemenang keluar: fanfare, kilau, dan tepuk tangan
+      win:function(){
+        if(!on||!ac()) return; var t=ctx.currentTime+0.05, i;
+        var arp=[523.25,659.25,783.99,1046.5];
+        for(i=0;i<arp.length;i++){ tone(arp[i],t+i*0.11,0.3,'triangle',0.2); tone(arp[i]/2,t+i*0.11,0.3,'square',0.04); }
+        var chord=[523.25,659.25,783.99,1046.5], tc=t+0.5;
+        for(i=0;i<chord.length;i++){ tone(chord[i],tc,1.2,'triangle',0.15); tone(chord[i]*2,tc,0.9,'sine',0.04); }
+        for(i=0;i<12;i++) tone(2200+Math.random()*2200,tc+0.05+i*0.09+Math.random()*0.05,0.12,'sine',0.035);
+        noise(tc-0.1,1.9,1900,0.6,function(g,t0){
+          g.linearRampToValueAtTime(0.1,t0+0.2);
+          for(var k=0;k<38;k++) g.linearRampToValueAtTime(0.05+Math.random()*0.1,t0+0.2+k*0.04);
+          g.linearRampToValueAtTime(0.0001,t0+1.85);
+        });
+      }
+    };
+  })();
+
+  $('snd').addEventListener('click',function(){
+    sfx.set(!sfx.isOn()); this.textContent='Suara: '+(sfx.isOn()?'nyala':'mati'); this.setAttribute('aria-pressed',sfx.isOn()?'true':'false');
+    if(sfx.isOn()){sfx.prime();sfx.tick(0.5)}
+  });
+  (function(){var b=$('snd'); b.textContent='Suara: '+(sfx.isOn()?'nyala':'mati'); b.setAttribute('aria-pressed',sfx.isOn()?'true':'false')})();
+
   // Maskot mengikuti keadaan panggung: diam, berputar, atau ada pemenang
   (function(){
     var disp=$('display'), m=$('mascot');
