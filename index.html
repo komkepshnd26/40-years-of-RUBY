@@ -865,15 +865,14 @@ window.UndianDrive = (function () {
 
   // Efek suara dibuat langsung di browser (tanpa berkas audio), jadi tetap jalan offline
   var sfx=(function(){
-    var KEYS='undian-ruby-40-sound', KEYM='undian-ruby-40-music', ctx=null, master=null, mus=null, on=true, mOn=false, mTimer=0, mNext=0, mStep=0, mEl=null, mUrl='', mDuck=false, duckT=0;
-    try{on=localStorage.getItem(KEYS)!=='0'; mOn=localStorage.getItem(KEYM)==='1'}catch(e){}
+    var KEYS='undian-ruby-40-sound', KEYM='undian-ruby-40-music', ctx=null, master=null, mus=null, on=true, mOn=true, mTimer=0, mEl=null, mUrl='', mDuck=false, duckT=0;
+    try{on=localStorage.getItem(KEYS)!=='0'; mOn=localStorage.getItem(KEYM)!=='0'}catch(e){}
     function ac(){
       if(!ctx){
         try{
           var C=window.AudioContext||window.webkitAudioContext; ctx=new C();
           var comp=ctx.createDynamicsCompressor(); master=ctx.createGain(); master.gain.value=0.7;
           master.connect(comp); comp.connect(ctx.destination);
-          mus=ctx.createGain(); mus.gain.value=0.5; mus.connect(comp);
         }catch(e){ctx=null;return null}
       }
       if(ctx.state==='suspended'){try{ctx.resume()}catch(e){}}
@@ -895,66 +894,38 @@ window.UndianDrive = (function () {
       var g=ctx.createGain(); g.gain.setValueAtTime(0.0001,t); fn(g.gain,t);
       src.connect(bp); bp.connect(g); g.connect(master); src.start(t); src.stop(t+dur);
     }
-    /* Backsound instrumental lembut: akor panjang + petikan pelan, dibuat langsung di browser */
-    var CH=[ [130.81,196.00,261.63,329.63,493.88],   // Cmaj7
-             [110.00,164.81,261.63,329.63,392.00],   // Am7
-             [87.31,130.81,261.63,349.23,440.00],    // Fmaj7
-             [98.00,146.83,246.94,293.66,392.00] ];  // G
-    var BEAT=0.62;                                   // detik per ketukan (~97 bpm)
-    function pad(fr,t,dur){
-      var o=ctx.createOscillator(), o2=ctx.createOscillator(), g=ctx.createGain(), lp=ctx.createBiquadFilter();
-      o.type='triangle'; o2.type='sine'; o.frequency.value=fr; o2.frequency.value=fr*1.003;
-      lp.type='lowpass'; lp.frequency.value=900;
-      g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.05,t+1.2);
-      g.gain.setValueAtTime(0.05,t+dur-1.4); g.gain.linearRampToValueAtTime(0.0001,t+dur+0.4);
-      o.connect(lp); o2.connect(lp); lp.connect(g); g.connect(mus);
-      o.start(t); o2.start(t); o.stop(t+dur+0.5); o2.stop(t+dur+0.5);
+    /* Backsound: berkas backsound.mp3 di folder yang sama, diputar berulang (loop) */
+    function vol(){return mDuck?0.12:0.4}
+    function level(){
+      clearInterval(mTimer);
+      mTimer=setInterval(function(){
+        if(!mEl){clearInterval(mTimer);return}
+        var d=vol()-mEl.volume;
+        if(Math.abs(d)<0.02){mEl.volume=vol();clearInterval(mTimer)} else mEl.volume=Math.max(0,Math.min(1,mEl.volume+d*0.25));
+      },60);
     }
-    function pluck(fr,t,vol){
-      var o=ctx.createOscillator(), g=ctx.createGain();
-      o.type='sine'; o.frequency.value=fr;
-      g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+0.015);
-      g.gain.exponentialRampToValueAtTime(0.0001,t+1.6);
-      o.connect(g); g.connect(mus); o.start(t); o.stop(t+1.7);
+    function mPlay(){ if(!mEl) return; mEl.volume=vol(); var p=mEl.play(); if(p&&p.catch) p.catch(function(){}); }
+    function mAttach(url,fromUser){
+      var a=new Audio(); a.loop=true; a.preload='auto'; a.src=url; a.volume=vol();
+      a.addEventListener('error',function(){ if(!fromUser&&api.onMissing) api.onMissing(); });
+      if(mEl){try{mEl.pause()}catch(e){}}
+      if(mUrl&&fromUser) try{URL.revokeObjectURL(mUrl)}catch(e){}
+      mEl=a; if(fromUser) mUrl=url;
+      if(mOn) mPlay();
     }
-    var ARP=[2,3,4,3,2,3,4,1];
-    function sched(){
-      if(!ctx||!mOn||mEl) return;
-      while(mNext<ctx.currentTime+1.2){
-        var bar=Math.floor(mStep/8)%CH.length, k=mStep%8, c=CH[bar];
-        if(k===0){ for(var i=0;i<c.length;i++) pad(c[i]*(i>1?1:1),mNext,BEAT*8); }
-        var f=c[ARP[k]]*(k===7?2:1)*(ARP[k]<2?2:1);
-        pluck(f,mNext,k%4===0?0.075:0.05);
-        if(k===0&&bar%2===1&&Math.random()<0.6) pluck(c[4]*2,mNext+BEAT*0.5,0.035);
-        mNext+=BEAT; mStep++;
-      }
-    }
-    function level(){ if(!mus||!ctx) return; var v=mDuck?0.18:0.5; mus.gain.cancelScheduledValues(ctx.currentTime); mus.gain.setTargetAtTime(v,ctx.currentTime,0.4); }
-    function mStart(){
-      if(!ac()) return;
-      if(mEl){ try{mEl.play()}catch(e){} level(); return; }
-      clearInterval(mTimer); mNext=ctx.currentTime+0.15; mStep=0; level();
-      sched(); mTimer=setInterval(sched,400);
-    }
-    function mStop(){ clearInterval(mTimer); mTimer=0; if(mEl) try{mEl.pause()}catch(e){} if(mus&&ctx){mus.gain.cancelScheduledValues(ctx.currentTime); mus.gain.setTargetAtTime(0,ctx.currentTime,0.15)} }
-    return {
+    var api={
+      onMissing:null,
+      loadDefault:function(){
+        fetch('backsound.mp3').then(function(r){ if(!r.ok) throw 0; return r.blob() }).then(function(b){
+          if(mEl&&mUrl) return;                       // lagu pilihan sendiri sudah dipakai
+          mAttach(URL.createObjectURL(b),false);
+        }).catch(function(){ if(api.onMissing) api.onMissing() });
+      },
       musicOn:function(){return mOn},
       hasFile:function(){return !!mEl},
-      musicSet:function(v){ mOn=!!v; try{localStorage.setItem(KEYM,mOn?'1':'0')}catch(e){} if(mOn) mStart(); else mStop(); },
-      musicResume:function(){ if(mOn&&!mTimer&&!(mEl&&!mEl.paused)) mStart(); },
-      musicFile:function(f){
-        if(!ac()) return false;
-        if(mUrl) try{URL.revokeObjectURL(mUrl)}catch(e){}
-        if(mEl){try{mEl.pause()}catch(e){}}
-        clearInterval(mTimer); mTimer=0;
-        mUrl=URL.createObjectURL(f);
-        var a=new Audio(); a.src=mUrl; a.loop=true;
-        try{ ctx.createMediaElementSource(a).connect(mus) }catch(e){ a.volume=0.5 }
-        mEl=a; mOn=true; try{localStorage.setItem(KEYM,'1')}catch(e){}
-        level(); try{a.play()}catch(e){}
-        return true;
-      },
-      musicDefault:function(){ if(mEl){try{mEl.pause()}catch(e){} mEl=null} if(mOn) mStart(); },
+      musicSet:function(v){ mOn=!!v; try{localStorage.setItem(KEYM,mOn?'1':'0')}catch(e){} if(mOn) mPlay(); else if(mEl) try{mEl.pause()}catch(e){} },
+      musicResume:function(){ if(mOn&&mEl&&mEl.paused) mPlay(); },
+      musicFile:function(f){ mOn=true; try{localStorage.setItem(KEYM,'1')}catch(e){} mAttach(URL.createObjectURL(f),true); return true; },
       duck:function(v){ mDuck=!!v; level(); },
       isOn:function(){return on},
       set:function(v){on=!!v; try{localStorage.setItem(KEYS,on?'1':'0')}catch(e){}},
@@ -987,6 +958,7 @@ window.UndianDrive = (function () {
         });
       }
     };
+    return api;
   })();
 
   $('snd').addEventListener('click',function(){
@@ -1001,8 +973,11 @@ window.UndianDrive = (function () {
     if(sfx.musicFile(f)){ musLabel(); $('musPick').textContent='Lagu: '+(f.name.length>18?f.name.slice(0,16)+'…':f.name); $('musPick').title='Klik untuk ganti lagu. Lagu perlu dipilih lagi setelah halaman dimuat ulang.' }
   });
   musLabel();
+  sfx.onMissing=function(){ $('mus').hidden=true; };
+  sfx.loadDefault();
   // browser baru boleh bunyi setelah ada sentuhan pertama; musik yang tersimpan "nyala" mulai saat itu
   function firstTouch(e){ if(e&&e.target&&e.target.closest&&e.target.closest('#mus,#musPick')) return; document.removeEventListener('pointerdown',firstTouch); document.removeEventListener('keydown',firstTouch); sfx.musicResume() }
+  window.addEventListener('load',function(){ setTimeout(function(){ sfx.musicResume() },600) });
   document.addEventListener('pointerdown',firstTouch); document.addEventListener('keydown',firstTouch);
   (function(){var b=$('snd'); b.textContent='Suara: '+(sfx.isOn()?'nyala':'mati'); b.setAttribute('aria-pressed',sfx.isOn()?'true':'false')})();
 
