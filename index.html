@@ -322,8 +322,9 @@ window.UndianDrive = (function () {
   function explain(e) {
     var m = (e && e.message) || '';
     if (e && e.server) return m;
-    if (m === 'BUKAN_JSON') return 'Jawaban dari Apps Script tidak terbaca. Pastikan deployment Web app diatur "Who has access: Anyone", dan alamat di config.js benar.';
-    return 'Tidak bisa menghubungi Google. Dicoba lagi otomatis.';
+    if (m === 'BUKAN_JSON') return 'Jawaban dari Apps Script tidak terbaca. Buka Deploy > Manage deployments di Apps Script, pastikan "Who has access" diatur ke Anyone, lalu deploy versi baru.';
+    if (!navigator.onLine) return 'Tidak ada internet. Dicoba lagi otomatis saat internet kembali.';
+    return 'Tidak bisa menghubungi Apps Script. Penyebab tersering: "Who has access" belum diatur ke Anyone, atau Code.gs belum di-deploy sebagai versi baru. Dicoba lagi otomatis.';
   }
 
   function valid(d) {
@@ -408,7 +409,7 @@ window.UndianDrive = (function () {
     var msg = explain(e);
     if (e && e.server && /sandi salah/i.test(e.message)) {
       setToken(''); ui();
-      status('Kata sandi salah. Masukkan lagi kata sandi yang Anda isi di Apps Script.', 'err');
+      status('Kata sandi salah. Harus sama persis dengan TOKEN di Code.gs (huruf besar dan kecil dibedakan), dan Code.gs harus sudah di-deploy sebagai versi baru.', 'err');
     } else {
       status(msg, e && e.server ? 'err' : 'warn');
       if (!(e && e.server)) { clearTimeout(timer); timer = setTimeout(function () { if (dirty) push(); else reconcile(); }, 20000); }
